@@ -46,6 +46,8 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
 
+  scene.background = new THREE.Color(0xffc0cb);
+
   // 添加光源
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
@@ -63,33 +65,55 @@ function init() {
   const loader = new OBJLoader();
 
   // 加载人物模型
-  loader.load("/src/assets/FinalBaseMesh.obj", (object) => {
-    scene.add(object);
+  // loader.load("/src/assets/FinalBaseMesh.obj", (object) => {
+  loader.load("/src/assets/male.obj", (object) => {
+    // scene.add(object);
+    adjustColorToObject(object);
     adjustCameraToObject(object);
   });
 
   // 加载衣物模型
   const clothesModels = [
-    "/src/assets/shirt.obj",
+    "/src/assets/shirt.blend",
     "/src/assets/pant.obj",
     "/src/assets/suit.obj",
   ];
   clothesModels.forEach((modelPath) => {
     loader.load(modelPath, (object) => {
-      scene.add(object);
-      adjustCameraToObject(object);
+      // scene.add(object);
+      adjustCameraToObject(object, true);
+      adjustColorToObject(object, true);
     });
   });
 
   // 设置控制器
   controls = new OrbitControls(camera, renderer.domElement);
-
-  // 设置环境光
-  const light = new THREE.AmbientLight(0xffffff); // soft white light
-  scene.add(light);
 }
+const adjustColorToObject = (object, isClothe = false) => {
+  object.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      // Check if the material has vertex colors
+      if (child.material.vertexColors !== undefined) {
+        child.material.color.setRGB(1, 1, 1); // 设置为白色，保持原本的颜色
+        child.material.vertexColors = THREE.NoColors; // 禁用顶点颜色
+      }
+    }
+  });
+  scene.add(object);
+};
 
-function adjustCameraToObject(object) {
+function adjustCameraToObject(object, isClothe = false) {
+  if (isClothe) {
+    const targetPoint = new THREE.Vector3(0, 1, 0);
+    // 设置衣服的朝向
+    object.lookAt(targetPoint);
+    // 衣服旋转
+    object.rotation.z = Math.PI;
+    object.scale.set(0.08, 0.08, 0.08);
+    object.position.z = -0.5;
+  } else {
+    // object.scale.set(0.9999, 0.9999, 0.9999);
+  }
   // 计算模型的边界框
   const box = new THREE.Box3().setFromObject(object);
   const center = box.getCenter(new THREE.Vector3());
@@ -99,17 +123,14 @@ function adjustCameraToObject(object) {
   const maxDim = Math.max(size.x, size.y, size.z);
   const fov = camera.fov * (Math.PI / 180);
   let cameraZ = Math.abs((maxDim / 4) * Math.tan(fov * 2));
-
   // 调整相机位置
   cameraZ *= 12; // 为了确保模型完全可见，可以适当增加这个值
   camera.position.z = cameraZ;
 
   const minZ = box.min.z;
   const cameraToFarEdge = minZ < 0 ? -minZ + cameraZ : cameraZ - minZ;
-
   camera.far = cameraToFarEdge * 3;
   camera.updateProjectionMatrix();
-
   // 设置相机以查看模型的中心
   camera.lookAt(center);
 }
