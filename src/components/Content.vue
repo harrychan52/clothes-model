@@ -1,21 +1,16 @@
 <template>
-  <div id="container"></div>
+  <div></div>
 </template>
 
 <script setup lang="ts">
 // import ModelObj from "../assets/FinalBaseMesh.obj";
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-let camera: THREE.PerspectiveCamera,
-  scene: THREE.Scene,
-  renderer: THREE.WebGLRenderer;
-let controls: OrbitControls;
 
 onMounted(() => {
-  init();
   animate();
 });
 
@@ -23,73 +18,86 @@ onUnmounted(() => {
   if (renderer) {
     renderer.dispose();
   }
+})
+const container = document.getElementById("app");
+
+// 创建场景
+const scene = new THREE.Scene();
+
+// 设置相机
+const camera:any = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+//调整相机高度 45°俯视角
+camera.position.y = 10;
+
+// 设置渲染器
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+container!.appendChild(renderer.domElement);
+
+scene.background = new THREE.Color(0x000000);
+
+//添加世界坐标辅组
+const axesHelper = new THREE.AxesHelper(5);
+scene.add(axesHelper);
+
+
+
+// 添加光源
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+// 添加点光源
+const pointLight:any = new THREE.PointLight(0xffffff, 100, 0); // 颜色，强度，距离
+pointLight.position.set(8, 8, 8); // 将点光源位置调整得更高一些，以便更均匀地照亮人物
+scene.add(pointLight);
+
+// 添加平行光
+const directionalLight:any = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(-8, 8, -8); // 将平行光的方向稍微倾斜，以便照亮人物的侧面
+scene.add(directionalLight);
+
+// 对于点光源添加辅组
+const pointLightHelper = new THREE.PointLightHelper(pointLight, 1); // 第二个参数是辅助对象的大小
+scene.add(pointLightHelper);
+
+// 对于平行光添加辅组
+const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1); // 第二个参数是辅助对象的大小
+scene.add(directionalLightHelper);
+
+// 加载.obj模型
+const loader = new OBJLoader();
+
+// 加载人物模型
+// loader.load("/src/assets/FinalBaseMesh.obj", (object) => {
+loader.load("/src/assets/male.obj", (object) => {
+  // scene.add(object);
+  adjustColorToObject(object);
+  adjustCameraToObject(object);
 });
 
-function init() {
-  const container = document.getElementById("container")!;
-
-  // 创建场景
-  scene = new THREE.Scene();
-
-  // 设置相机
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  //调整相机高度 45°俯视角
-  camera.position.y = 10;
-
-  // 设置渲染器
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(renderer.domElement);
-
-  scene.background = new THREE.Color(0xffc0cb);
-
-  // 添加光源
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
-  // 添加点光源
-  const pointLight = new THREE.PointLight(0xffffff, 1, 100); // 颜色，强度，距离
-  pointLight.position.set(10, 10, 10); // 设置光源位置
-  scene.add(pointLight);
-
-  // 添加平行光
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  directionalLight.position.set(0, 1, 0); // 设置光源方向
-  scene.add(directionalLight);
-
-  // 加载.obj模型
-  const loader = new OBJLoader();
-
-  // 加载人物模型
-  // loader.load("/src/assets/FinalBaseMesh.obj", (object) => {
-  loader.load("/src/assets/male.obj", (object) => {
+// 加载衣物模型
+const clothesModels = [
+  "/src/assets/shirt.blend",
+  "/src/assets/pant.obj",
+  "/src/assets/suit.obj",
+];
+clothesModels.forEach((modelPath) => {
+  loader.load(modelPath, (object) => {
     // scene.add(object);
-    adjustColorToObject(object);
-    adjustCameraToObject(object);
+    adjustCameraToObject(object, true);
+    adjustColorToObject(object, true);
   });
+});
 
-  // 加载衣物模型
-  const clothesModels = [
-    "/src/assets/shirt.blend",
-    "/src/assets/pant.obj",
-    "/src/assets/suit.obj",
-  ];
-  clothesModels.forEach((modelPath) => {
-    loader.load(modelPath, (object) => {
-      // scene.add(object);
-      adjustCameraToObject(object, true);
-      adjustColorToObject(object, true);
-    });
-  });
+// 设置控制器
+const controls = new OrbitControls(camera, renderer.domElement);
 
-  // 设置控制器
-  controls = new OrbitControls(camera, renderer.domElement);
-}
-const adjustColorToObject = (object, isClothe = false) => {
+const adjustColorToObject = (object, isClothes = false) => {
   object.traverse((child) => {
     if (child instanceof THREE.Mesh) {
       // Check if the material has vertex colors
@@ -102,8 +110,8 @@ const adjustColorToObject = (object, isClothe = false) => {
   scene.add(object);
 };
 
-function adjustCameraToObject(object, isClothe = false) {
-  if (isClothe) {
+function adjustCameraToObject(object, isClothes = false) {
+  if (isClothes) {
     const targetPoint = new THREE.Vector3(0, 1, 0);
     // 设置衣服的朝向
     object.lookAt(targetPoint);
@@ -143,9 +151,5 @@ function animate() {
 </script>
 
 <style lang="scss" scoped>
-#container {
-  width: 100%;
-  height: 100vh;
-  display: block;
-}
+
 </style>
