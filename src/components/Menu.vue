@@ -2,49 +2,20 @@
   <div>
     <div class="menu">
       <div>
-        <span class="label">red:</span>
-        <input id="red" type="number" :value="color.red" @input="inputEvent" />
+        <span class="label">颜色:</span>
+        <input id="red" type="color" :value="color" @input="inputEvent" @blur="emit('color-change', color)"/>
       </div>
-      <div>
-        <span class="label">green:</span>
-        <input
-          id="green"
-          type="number"
-          :value="color.green"
-          @input="inputEvent"
-        />
-      </div>
-      <div>
-        <span class="label">blue:</span>
-        <input
-          id="blue"
-          type="number"
-          :value="color.blue"
-          @input="inputEvent"
-        />
-      </div>
-      <div class="submit-btn" @click="emit('color-change', color)">运行</div>
+      <!-- <div class="submit-btn" @click="emit('color-change', color)">运行</div> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { ref } from "vue";
 const emit = defineEmits(["color-change"]);
-const color = reactive({
-  red: 0,
-  green: 0,
-  blue: 0,
-});
+const color = ref();
 const inputEvent = (e: any) => {
-  const val = e.target.value;
-  if (val < 0) {
-    color[e.target.id] = 0;
-  } else if (val > 255) {
-    color[e.target.id] = 255;
-  } else {
-    color[e.target.id] = +e.target.value;
-  }
+  color.value = e.target.value;
 };
 </script>
 <style lang="scss" scoped>

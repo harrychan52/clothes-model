@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 // import ModelObj from "../assets/FinalBaseMesh.obj";
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -16,18 +16,10 @@ import Menu from "./Menu.vue";
 
 let controls: OrbitControls;
 
-const color = reactive({
-  red: 0,
-  green: 0,
-  blue: 0,
-});
+const color = ref();
 
 const colorChange = (val) => {
-  console.log(val);
-  color.red = val.red;
-  color.green = val.green;
-  color.blue = val.blue;
-  gltfReload(color);
+  gltfReload(val);
 };
 
 onMounted(() => {
@@ -58,9 +50,9 @@ container!.appendChild(renderer.domElement);
 
 controls = new OrbitControls(camera, renderer.domElement);
 
-// const mainLight = new THREE.PointLight(0xffffff, 2.5, 250, 0);
-// mainLight.position.y = 60;
-// scene.add(mainLight);
+const mainLight = new THREE.PointLight(0xffffff, 2.5, 250, 0);
+mainLight.position.y = 60;
+scene.add(mainLight);
 
 const greenLight = new THREE.PointLight(0xffffff, 0.5, 1000, 0);
 greenLight.position.set(550, 50, 0);
@@ -150,9 +142,7 @@ const gltfReload = (color = undefined) => {
             // 获取材质
             const material = child.material;
             // 修改材质的颜色
-            material.color.set(
-              new THREE.Color(color.red, color.green, color.blue)
-            ); // 红色
+            material.color.set(new THREE.Color(color));
           }
         });
       }
