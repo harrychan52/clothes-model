@@ -46,28 +46,19 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.y = -2;
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio)
 container!.appendChild(renderer.domElement);
 
 controls = new OrbitControls(camera, renderer.domElement);
 
-const mainLight = new THREE.PointLight(0xffffff, 2.5, 250, 0);
-mainLight.position.y = 60;
-scene.add(mainLight);
+const directionLight = new THREE.DirectionalLight(0xffffff, 4.5);
+directionLight.position.set(0, 10, 100);
+scene.add(directionLight)
+scene.add(new THREE.DirectionalLightHelper(directionLight))
 
-const greenLight = new THREE.PointLight(0xffffff, 0.5, 1000, 0);
-greenLight.position.set(550, 50, 0);
-scene.add(greenLight);
-
-const redLight = new THREE.PointLight(0xffffff, 0.5, 1000, 0);
-redLight.position.set(-550, 50, 0);
-scene.add(redLight);
-
-const blueLight = new THREE.PointLight(0xbbbbfe, 0.5, 1000, 0);
-blueLight.position.set(0, 50, 550);
-scene.add(blueLight);
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
+const directionBackLight = new THREE.DirectionalLight(0xffffff, 4.5)
+directionBackLight.position.set(0, 10, -100);
+scene.add(directionBackLight)
 
 // 地面镜子
 // const circleGeometry = new THREE.PlaneGeometry(12, 12);
