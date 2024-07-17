@@ -35,13 +35,11 @@ const inputEvent = (e: any) => {
   color.value = e.target.value;
 };
 const onScaleLarger = () => {
-  scale.value = Number.parseFloat(scale.value + 0.1).toFixed(1);
-  console.log(scale.value);
+  scale.value = Number((scale.value + 0.2).toFixed(1));
   emit("scale-change", scale.value);
 };
 const onScaleSmaller = () => {
-  scale.value = Number.parseFloat(scale.value - 0.1).toFixed(1);
-  console.log(scale.value);
+  scale.value = Number((scale.value - 0.2).toFixed(1));
   emit("scale-change", scale.value);
 };
 </script>

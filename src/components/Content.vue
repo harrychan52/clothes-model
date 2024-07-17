@@ -29,9 +29,9 @@ const colorChange = (val) => {
 };
 const scaleChange = (val) => {
   scale.value = val;
-  console.log("scale", scale.value);
   gltfReload(color, scale);
 };
+
 
 onMounted(() => {
   animate();
@@ -55,6 +55,7 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 camera.position.y = -2;
+// 设置渲染器
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -62,14 +63,19 @@ container!.appendChild(renderer.domElement);
 
 controls = new OrbitControls(camera, renderer.domElement);
 
+// 设置前光源
 const directionLight = new THREE.DirectionalLight(0xffffff, 4.5);
 directionLight.position.set(0, 10, 100);
 scene.add(directionLight);
-scene.add(new THREE.DirectionalLightHelper(directionLight));
+// 辅组件，用于显示光源位置
+// scene.add(new THREE.DirectionalLightHelper(directionLight));
 
+// 设置后光源
 const directionBackLight = new THREE.DirectionalLight(0xffffff, 4.5);
 directionBackLight.position.set(0, 10, -100);
 scene.add(directionBackLight);
+// 辅组件，用于显示光源位置
+// scene.add(new THREE.DirectionalLightHelper(directionBackLight));
 
 // 创建左边镜子
 const geometry = new THREE.PlaneGeometry(20, 20);
@@ -117,13 +123,23 @@ const gltfLoader = new GLTFLoader();
 // clothesModels.forEach((modelPath) => {
 // });
 
+let currentGltfScene = null; // 用于追踪当前场景中的模型
 const gltfReload = (color = undefined, scale) => {
+  console.log(scale.value);
+  
+  // 如果场景中已有模型，先移除
+  if (currentGltfScene) {
+    scene.remove(currentGltfScene);
+  }
+
   gltfLoader.load(
     "/src/assets/t-shirt.glb",
     (gltf) => {
       const gltfScene = gltf.scene;
       gltfScene.scale.set(scale.value, scale.value, scale.value);
-      gltfScene.position.set(0, -7.7, 0.18);
+      // 根据缩放调整位置，确保模型居中或处于预期位置
+      gltfScene.position.set(0, -7.7 * (scale.value / 5), 0.18);
+
       if (color) {
         gltfScene.traverse((child) => {
           // 检查子对象是否是Mesh
@@ -135,7 +151,9 @@ const gltfReload = (color = undefined, scale) => {
           }
         });
       }
+
       scene.add(gltfScene);
+      currentGltfScene = gltfScene; // 更新当前模型引用
     },
     undefined,
     function (error) {
