@@ -1,6 +1,11 @@
 <template>
   <div>
-    <Menu :color="color" @color-change="colorChange" />
+    <Menu
+      :color="color"
+      @color-change="colorChange"
+      :scale="scale"
+      @scale-change="scaleChange"
+    />
   </div>
 </template>
 
@@ -17,9 +22,15 @@ import Menu from "./Menu.vue";
 let controls: OrbitControls;
 
 const color = ref();
+const scale = ref(5);
 
 const colorChange = (val) => {
-  gltfReload(val);
+  gltfReload(val, scale);
+};
+const scaleChange = (val) => {
+  scale.value = val;
+  console.log("scale", scale.value);
+  gltfReload(color, scale);
 };
 
 onMounted(() => {
@@ -46,32 +57,19 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.y = -2;
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio)
+renderer.setPixelRatio(window.devicePixelRatio);
 container!.appendChild(renderer.domElement);
 
 controls = new OrbitControls(camera, renderer.domElement);
 
 const directionLight = new THREE.DirectionalLight(0xffffff, 4.5);
 directionLight.position.set(0, 10, 100);
-scene.add(directionLight)
-scene.add(new THREE.DirectionalLightHelper(directionLight))
+scene.add(directionLight);
+scene.add(new THREE.DirectionalLightHelper(directionLight));
 
-const directionBackLight = new THREE.DirectionalLight(0xffffff, 4.5)
+const directionBackLight = new THREE.DirectionalLight(0xffffff, 4.5);
 directionBackLight.position.set(0, 10, -100);
-scene.add(directionBackLight)
-
-// 地面镜子
-// const circleGeometry = new THREE.PlaneGeometry(12, 12);
-// const groundMirror = new Reflector(circleGeometry, {
-//   clipBias: 0.003,
-//   textureWidth: window.innerWidth * window.devicePixelRatio,
-//   textureHeight: window.innerHeight * window.devicePixelRatio,
-//   color: 0xb5b5b5,
-// });
-// groundMirror.position.y = -6;
-// groundMirror.rotateX(-Math.PI / 2);
-// groundMirror.rotateZ(-Math.PI / 4);
-// scene.add(groundMirror);
+scene.add(directionBackLight);
 
 // 创建左边镜子
 const geometry = new THREE.PlaneGeometry(20, 20);
@@ -119,12 +117,12 @@ const gltfLoader = new GLTFLoader();
 // clothesModels.forEach((modelPath) => {
 // });
 
-const gltfReload = (color = undefined) => {
+const gltfReload = (color = undefined, scale) => {
   gltfLoader.load(
     "/src/assets/t-shirt.glb",
     (gltf) => {
       const gltfScene = gltf.scene;
-      gltfScene.scale.set(5, 5, 5);
+      gltfScene.scale.set(scale.value, scale.value, scale.value);
       gltfScene.position.set(0, -7.7, 0.18);
       if (color) {
         gltfScene.traverse((child) => {
@@ -145,7 +143,7 @@ const gltfReload = (color = undefined) => {
     }
   );
 };
-gltfReload();
+gltfReload(undefined, scale);
 
 // 设置控制器
 function adjustCameraToObject(object) {
